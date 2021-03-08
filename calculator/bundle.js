@@ -45878,37 +45878,53 @@ utils.intFromLE = intFromLE;
 arguments[4][16][0].apply(exports,arguments)
 },{"buffer":"buffer","dup":16}],187:[function(require,module,exports){
 module.exports={
-  "name": "elliptic",
-  "version": "6.5.3",
-  "description": "EC cryptography",
-  "main": "lib/elliptic.js",
-  "files": [
-    "lib"
+  "_args": [
+    [
+      "elliptic@6.5.3",
+      "/home/donn/workspace/github.com/donnlee/seedpicker"
+    ]
   ],
-  "scripts": {
-    "jscs": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
-    "jshint": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
-    "lint": "npm run jscs && npm run jshint",
-    "unit": "istanbul test _mocha --reporter=spec test/index.js",
-    "test": "npm run lint && npm run unit",
-    "version": "grunt dist && git add dist/"
+  "_from": "elliptic@6.5.3",
+  "_id": "elliptic@6.5.3",
+  "_inBundle": false,
+  "_integrity": "sha512-IMqzv5wNQf+E6aHeIqATs0tOLeOTwj1QKbRcS3jBbYkl5oLAserA8yJTT7/VyHUYG91PRmPyeQDObKLPpeS4dw==",
+  "_location": "/elliptic",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "version",
+    "registry": true,
+    "raw": "elliptic@6.5.3",
+    "name": "elliptic",
+    "escapedName": "elliptic",
+    "rawSpec": "6.5.3",
+    "saveSpec": null,
+    "fetchSpec": "6.5.3"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:indutny/elliptic"
-  },
-  "keywords": [
-    "EC",
-    "Elliptic",
-    "curve",
-    "Cryptography"
+  "_requiredBy": [
+    "/browserify-sign",
+    "/create-ecdh",
+    "/tiny-secp256k1"
   ],
-  "author": "Fedor Indutny <fedor@indutny.com>",
-  "license": "MIT",
+  "_resolved": "https://registry.npmjs.org/elliptic/-/elliptic-6.5.3.tgz",
+  "_spec": "6.5.3",
+  "_where": "/home/donn/workspace/github.com/donnlee/seedpicker",
+  "author": {
+    "name": "Fedor Indutny",
+    "email": "fedor@indutny.com"
+  },
   "bugs": {
     "url": "https://github.com/indutny/elliptic/issues"
   },
-  "homepage": "https://github.com/indutny/elliptic",
+  "dependencies": {
+    "bn.js": "^4.4.0",
+    "brorand": "^1.0.1",
+    "hash.js": "^1.0.0",
+    "hmac-drbg": "^1.0.0",
+    "inherits": "^2.0.1",
+    "minimalistic-assert": "^1.0.0",
+    "minimalistic-crypto-utils": "^1.0.0"
+  },
+  "description": "EC cryptography",
   "devDependencies": {
     "brfs": "^1.4.3",
     "coveralls": "^3.0.8",
@@ -45925,15 +45941,32 @@ module.exports={
     "jshint": "^2.10.3",
     "mocha": "^6.2.2"
   },
-  "dependencies": {
-    "bn.js": "^4.4.0",
-    "brorand": "^1.0.1",
-    "hash.js": "^1.0.0",
-    "hmac-drbg": "^1.0.0",
-    "inherits": "^2.0.1",
-    "minimalistic-assert": "^1.0.0",
-    "minimalistic-crypto-utils": "^1.0.0"
-  }
+  "files": [
+    "lib"
+  ],
+  "homepage": "https://github.com/indutny/elliptic",
+  "keywords": [
+    "EC",
+    "Elliptic",
+    "curve",
+    "Cryptography"
+  ],
+  "license": "MIT",
+  "main": "lib/elliptic.js",
+  "name": "elliptic",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/indutny/elliptic.git"
+  },
+  "scripts": {
+    "jscs": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
+    "jshint": "jscs benchmarks/*.js lib/*.js lib/**/*.js lib/**/**/*.js test/index.js",
+    "lint": "npm run jscs && npm run jshint",
+    "test": "npm run lint && npm run unit",
+    "unit": "istanbul test _mocha --reporter=spec test/index.js",
+    "version": "grunt dist && git add dist/"
+  },
+  "version": "6.5.3"
 }
 
 },{}],188:[function(require,module,exports){
@@ -65453,19 +65486,21 @@ const prefixes = require('./xpubformats.js').xpubPrefixes
 const crypto = require('crypto')
 const cryptoHash = require('crypto-hashing')
 
-function keysFromMnemonic(mnemonic, network) {
+function keysFromMnemonic(mnemonic, network, password) {
     const derivationPath = derivationPathFromNetwork(network)
     return {
         xpub: xpubFromMnemonic(mnemonic, derivationPath),
-        Zpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath), 'Zpub', network),
-        Vpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath), 'Vpub', network),
+        // Zpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath), 'Zpub', network),
+        Zpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath, password), 'zpub', network),
+        Vpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath, password), 'Vpub', network),
         derivationPath: derivationPath,
         network
     }
 }
 
-function xpubFromMnemonic(mnemonic, derivationPath) {
-    const seed = bip39.mnemonicToSeedSync(mnemonic)
+function xpubFromMnemonic(mnemonic, derivationPath, password) {
+    // password is a typescript optional.
+    const seed = bip39.mnemonicToSeedSync(mnemonic, password)
     const node = bip32.fromSeed(seed)
     const child = node.derivePath(derivationPath.full)
     return child.neutered().toBase58()
@@ -65496,8 +65531,8 @@ function anyPubFrom(source, targetPrefix, network) {
 // that Electrum and Specter (and Coldcard?) use for Segwit Multisig (P2WSH)
 function derivationPathFromNetwork(network) {
     if (network == 'mainnet') return {
-        full: "m/48'/0'/0'/2'",
-        short: "/48'/0'/0'/2'",
+        full: "m/84'/0'/0'",
+        short: "/84'/0'/0'",
     }
     if (network == 'testnet') return {
         full: "m/48'/1'/0'/2'",
@@ -65509,8 +65544,8 @@ function derivationPathFromNetwork(network) {
 /**
  * https://github.com/merland/seedpicker/issues/23
  */
-function rootFingerPrintFromMnemonic(mnemonic) {
-    const seed = bip39.mnemonicToSeedSync(mnemonic);
+function rootFingerPrintFromMnemonic(mnemonic, password) {
+    const seed = bip39.mnemonicToSeedSync(mnemonic, password);
     const node = bip32.fromSeed(seed);
 
     //The root/parent xpub (Before any derivation)
@@ -65736,6 +65771,7 @@ function scrollTo(selector) {
 }
 
 function submitButtonAction(callback) {
+    const password = $("#password_input").val();
     const phraseField = $("#seedphrase_input");
     const validation = logic.validate(phraseField.val())
     const $seedErrorMsg = $("#seed_error_msg");
@@ -65756,8 +65792,8 @@ function submitButtonAction(callback) {
     setTimeout(() => {
         const checksumWord = logic.firstChecksumWordAlphabetically(validation.cleanedUpPhrase)
         const mnemonic = validation.cleanedUpPhrase + " " + checksumWord
-        const pubKeys = logic.keysFromMnemonic(mnemonic, network);
-        const rootFingerprint = logic.rootFingerPrintFromMnemonic(mnemonic)
+        const pubKeys = logic.keysFromMnemonic(mnemonic, network, password);
+        const rootFingerprint = logic.rootFingerPrintFromMnemonic(mnemonic, password)
         const fileExportData = logic.assembleExportFileData(rootFingerprint, pubKeys)
         const qrData = logic.assembleQRCodeData(rootFingerprint, pubKeys)
 
@@ -65878,6 +65914,7 @@ function exportFileButtonAction() {
 module.exports = {
     init: init
 }
+
 },{"./logic.js":"logic","./xpubformats.js":1,"bip39":"bip39","kjua":222}],"wordlist":[function(require,module,exports){
 const wordlist = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, "abandon", 1],

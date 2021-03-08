@@ -122,6 +122,22 @@
             </div>
           </div>
         </div>
+
+        <div class="tighter_section">
+          <div class="field">
+            <label class="label input_label"
+              >Optional passphrase:</label
+            >
+            <div>
+                <input
+                  id="password_input"
+                  class="input has-background-light"
+                  type="text"
+                />
+            </div>
+          </div>
+        </div>
+
         <div class="tighter_section">
           <div class="field">
             <div class="is-pulled-right sample_label">
@@ -180,11 +196,12 @@
           <div id="specter_export_components" class="container">
             <div class="notification is-info-light">
               <div class="is-bold is-size-4">
-                Export Public Key Info To Specter Desktop
+                Public Key Info
               </div>
               <div class="is-italic">
-                This box contains everything you need to export your extended
-                public key to Specter Desktop.
+                This box originally contained extended public key info for
+                Specter Desktop multisig, but code was patched to now output
+                extended public key (zpub) for single-signature segwit.
               </div>
               <div class="is-italic"></div>
               <div>&nbsp;</div>
