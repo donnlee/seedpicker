@@ -14,7 +14,8 @@ const xpubPrefixes = {
         public: "04b24746"
     },
     "Ypub": {
-        public: "0295b43f"
+        public: "0295b43f",
+        desc: "Extended Public Key"  //This text is visible in the GUI // TODO: move to presentation logic
     },
     "Zpub": {
         public: "02aa7ed3",
@@ -41,6 +42,7 @@ const xpubPrefixes = {
 module.exports =  {
     xpubPrefixes: xpubPrefixes
 }
+
 },{}],2:[function(require,module,exports){
 'use strict';
 
@@ -65491,8 +65493,9 @@ function keysFromMnemonic(mnemonic, network, password) {
     return {
         xpub: xpubFromMnemonic(mnemonic, derivationPath),
         // Zpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath), 'Zpub', network),
+        Ypub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath, password), 'ypub', network),
         Zpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath, password), 'zpub', network),
-        Vpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath, password), 'Vpub', network),
+        Vpub: anyPubFrom(xpubFromMnemonic(mnemonic, derivationPath, password), 'vpub', network),
         derivationPath: derivationPath,
         network
     }
@@ -65521,22 +65524,28 @@ function convertPubkey(source, targetPrefix) {
  * Convert from xpub to other formats
  */
 function anyPubFrom(source, targetPrefix, network) {
+    // Donn patch hasn't yet updated this error checking.
     if (!network) throw new Error("network not set")
     if (network === 'mainnet' && targetPrefix === 'Vpub') return undefined
     if (network === 'testnet' && targetPrefix === 'Zpub') return undefined
     return convertPubkey(source, targetPrefix)
 }
 
-// These paths are selected from the defaults
-// that Electrum and Specter (and Coldcard?) use for Segwit Multisig (P2WSH)
+// Common derivation paths for single-sig.
+// These paths used to be what
+// Electrum and Specter (and Coldcard?) use for Segwit Multisig (P2WSH)
 function derivationPathFromNetwork(network) {
-    if (network == 'mainnet') return {
+    if (network == 'mainnet-native-segwit') return {
         full: "m/84'/0'/0'",
         short: "/84'/0'/0'",
     }
+    if (network == 'mainnet-nested-segwit') return {
+        full: "m/49'/0'/0'",
+        short: "/49'/0'/0'",
+    }
     if (network == 'testnet') return {
-        full: "m/48'/1'/0'/2'",
-        short: "/48'/1'/0'/2'"
+        full: "m/84'/1'/0'",
+        short: "/84'/1'/0'"
     }
     throw new Error("Wrong network " + network)
 }
@@ -65685,7 +65694,8 @@ const subtitle = "Construct your own Seed Phrase and calculate the corresponding
 const showMoreText = "Show more (for advanced users)";
 const showLessText = "Show less";
 
-const MAINNET = "mainnet"
+const MAINNET = "mainnet-native-segwit"
+const MAINNET_NESTED = "mainnet-nested-segwit"
 const TESTNET = "testnet"
 
 let network = MAINNET;
@@ -65772,6 +65782,8 @@ function scrollTo(selector) {
 
 function submitButtonAction(callback) {
     const password = $("#password_input").val();
+    const network = $("#network_select").val();
+    console.log('network_select: ' + network);
     const phraseField = $("#seedphrase_input");
     const validation = logic.validate(phraseField.val())
     const $seedErrorMsg = $("#seed_error_msg");
@@ -65793,6 +65805,8 @@ function submitButtonAction(callback) {
         const checksumWord = logic.firstChecksumWordAlphabetically(validation.cleanedUpPhrase)
         const mnemonic = validation.cleanedUpPhrase + " " + checksumWord
         const pubKeys = logic.keysFromMnemonic(mnemonic, network, password);
+        console.log('logic.keysFromMnemonic:');
+        console.log(pubKeys);
         const rootFingerprint = logic.rootFingerPrintFromMnemonic(mnemonic, password)
         const fileExportData = logic.assembleExportFileData(rootFingerprint, pubKeys)
         const qrData = logic.assembleQRCodeData(rootFingerprint, pubKeys)
@@ -65810,12 +65824,16 @@ function submitButtonAction(callback) {
         $("#xpub_key").text(pubKeys.xpub)
         $("#root_fingerprint").text(rootFingerprint)
 
-        if (isTestnet()) {
+        console.log('network before pubKeys output: ' + network);
+        if (network == TESTNET) {
             $("#extended_pub_heading").text(getVersionBytes("Vpub").desc)
             $("#extended_pub_result").text(pubKeys.Vpub)
-        } else {
+        } else if (network == MAINNET) {
             $("#extended_pub_heading").text(getVersionBytes("Zpub").desc)
             $("#extended_pub_result").text(pubKeys.Zpub)
+        } else if (network == MAINNET_NESTED) {
+            $("#extended_pub_heading").text(getVersionBytes("Ypub").desc)
+            $("#extended_pub_result").text(pubKeys.Ypub)
         }
         $("#derivation_path").text(pubKeys.derivationPath.full)
         $("#results").removeClass('is-hidden');
